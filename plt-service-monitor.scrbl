@@ -1,4 +1,9 @@
 #lang scribble/manual
+@(require (for-label racket/base
+                     racket/contract/base
+                     plt-service-monitor/beat
+                     plt-service-monitor/take-pulse
+                     plt-service-monitor/config))
 
 @title{PLT Service Monitor}
 
@@ -61,8 +66,12 @@ for adjusting a service monitor's configuration as stored at its S3
 bucket.}
 
 @deftogether[(
-@defproc[(add-task [s3-bucket string?]
+@defproc[(get-task [s3-bucket string?]
                    [task-name string?]
+                   [#:force? force? any/c #f])
+          (or/c #f hash?)]
+@defproc[(set-task [s3-bucket string?]
+                   [task hash?]
                    [#:force? force? any/c #f])
           void?]
 @defproc[(remove-task [s3-bucket string?]
@@ -70,20 +79,40 @@ bucket.}
           void?]
 )]{
 
-Adds or removes a task to the configuration at @racket[s3-bucket] for
-use by @racket[take-pulse].
+Gets, adjusts, or removes a task to the configuration at
+@racket[s3-bucket] for use by @racket[take-pulse].
 
-The task name should be the same as used with @racket[beat], although
-@racket[beat] does not check whether the task name is configured as
-one that is checked by @racket[take-pulse].
+The @racket[get-task] function returns @racket[#f] if the task name is
+not configured, otherwise it returns a hash table suitable for
+updating and returning to @racket[set-task].
 
-If @racket[force?] is true, the configuration is initialized to the
-empty configuration before adding @racket[task-name].}
+The hash table provided to @racket[set-task] can have the following
+keys with the indicated contracts on the key values:
 
+@itemlist[
+
+ @item{@racket['name : string?] (required) --- the task name as used
+        with @racket[beat] (but @racket[beat] does not check whether
+        a given task name is configured as one that is checked by
+        @racket[take-pulse])}
+
+ @item{@racket['period : exact-nonnegative-integer?] --- the maximum
+       number of seconds that should elapse between heartbeats for the
+       task; the default is one day}
+
+]
+
+Unless @racket[force?] is true, then @racket[get-task] or
+@racket[set-task] fail if @racket[s3-bucket] does not have a
+configuration object @filepath{config.rktd}.}
 
 @deftogether[(
-@defproc[(add-site [s3-bucket string?]
+@defproc[(get-site [s3-bucket string?]
                    [url string?]
+                   [#:force? force? any/c #f])
+          (or/c #f hash?)]
+@defproc[(set-site [s3-bucket string?]
+                   [site hash?]
                    [#:force? force? any/c #f])
           void?]
 @defproc[(remove-site [s3-bucket string?]
@@ -91,17 +120,28 @@ empty configuration before adding @racket[task-name].}
           void?]
 )]{
 
-Adds or removes a polled URL to the configuration at
-@racket[s3-bucket] for use by @racket[take-pulse].
+Gets, adjusts, or removes a polled URL to the configuration at
+@racket[s3-bucket] for use by @racket[take-pulse]. The function
+protocol is the same as for @racket[get-task], @racket[set-task], and
+@racket[remove-task].
 
-If @racket[force?] is true, the configuration is initialized to the
-empty configuration before adding @racket[url].}
+The hash table provided to @racket[set-site] can have the following
+keys with the indicated contracts on the key values:
 
+@itemlist[
+
+ @item{@racket['url : string?] (required) --- the URL to poll}
+
+]}
 
 
 @deftogether[(
-@defproc[(add-email [s3-bucket string?]
+@defproc[(get-email [s3-bucket string?]
                     [addr string?]
+                    [#:force? force? any/c #f])
+          (or/c #f hash?)]
+@defproc[(set-email [s3-bucket string?]
+                    [to hash?]
                     [#:force? force? any/c #f])
           void?]
 @defproc[(remove-email [s3-bucket string?]
@@ -109,9 +149,20 @@ empty configuration before adding @racket[url].}
           void?]
 )]{
 
-Adds or removes an e-mail address to the configuration at
-@racket[s3-bucket] for use by @racket[take-pulse]. Each e-mail address
-receives a message to summarize the check results.
+Gets, adjusts, or removes an e-mail address to the configuration at
+@racket[s3-bucket] for use by @racket[take-pulse], where Each e-mail
+address receives a message to summarize the check results. The
+function protocol is the same as for @racket[get-task],
+@racket[set-task], and @racket[remove-task].
 
-If @racket[force?] is true, the configuration is initialized to the
-empty configuration before adding @racket[addr].}
+The hash table provided to @racket[set-email] can have the following
+keys with the indicated contracts on the key values:
+
+@itemlist[
+
+ @item{@racket['to : string?] (required) --- the e-mail address}
+
+ @item{@racket['on-success? : boolean?] --- whether e-mail is sent
+       even when all health checks succeed; the default is @racket[#t]}
+
+]}

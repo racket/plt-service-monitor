@@ -8,6 +8,7 @@
 (provide take-pulse)
 
 (define (take-pulse s3-bucket
+                    #:email? [email? #t]
                     #:smtp-server [smtp-server #f])
   (define now (current-seconds))
   (define config
@@ -62,7 +63,10 @@
                 (<= (- now (hash-ref beat 'seconds 0))
                     (task-period task))))))
 
-  (define tos (hash-ref config 'emails null))
+  (define tos (for/list ([to (in-list (hash-ref config 'emails null))]
+                         #:when (or (not all-ok?)
+                                    (hash-ref to 'on-success? #t)))
+                to))
   
   (define collected (if (null? tos)
                         (current-output-port)
@@ -123,14 +127,17 @@
                        beat-date
                        ago)]))])))
   
-  (when (pair? tos)
+  (when (and email?
+             (pair? tos))
     (define content (get-output-string collected))
     (display content)
     
-    (printf "\nSending email...\n")
+    (printf "\nSending email:\n")
     (send-email smtp-server (for/list ([to (in-list tos)])
-                              (hash-ref to 'to))
-                (format "~a health check at ~a"
+                              (define addr (hash-ref to 'to))
+                              (printf "  ~a\n" addr)
+                              addr)
+                (format "[take-pulse] ~a health check at ~a"
                         (if all-ok?
                             "successful"
                             "FAILED")
@@ -142,12 +149,16 @@
 (module+ main
   (require racket/cmdline)
   (define smtp-server #f)
+  (define email? #t)
   (command-line
    #:once-each
+   [("--no-email") "Skip sending e-mail with results"
+    (set! email? #f)]
    [("--smtp") server "Specify a server for outgoing email"
     (set! smtp-server server)]
    #:args
    (s3-bucket)
    (unless (take-pulse s3-bucket
+                       #:email? email?
                        #:smtp-server smtp-server)
      (exit 1))))
