@@ -63,10 +63,13 @@
                 (<= (- now (hash-ref beat 'seconds 0))
                     (task-period task))))))
 
-  (define tos (for/list ([to (in-list (hash-ref config 'emails null))]
-                         #:when (or (not all-ok?)
-                                    (hash-ref to 'on-success? #t)))
-                to))
+  (define tos
+    (if email?
+        (for/list ([to (in-list (hash-ref config 'emails null))]
+                   #:when (or (not all-ok?)
+                              (hash-ref to 'on-success? #t)))
+          to)
+        null))
   
   (define collected (if (null? tos)
                         (current-output-port)
@@ -127,8 +130,7 @@
                        beat-date
                        ago)]))])))
   
-  (when (and email?
-             (pair? tos))
+  (when (pair? tos)
     (define content (get-output-string collected))
     (display content)
     
