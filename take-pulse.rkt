@@ -8,8 +8,8 @@
 (provide take-pulse)
 
 (define (take-pulse s3-bucket
-                    #:email? [email? #t]
-                    #:smtp-server [smtp-server #f])
+                    #:email-mode [email-mode 'always]
+                    #:email-config [email-config (hash)])
   (define now (current-seconds))
   (define config
     (read
@@ -64,7 +64,10 @@
                     (task-period task))))))
 
   (define tos
-    (if email?
+    (if (case email-mode
+          [(none) #f]
+          [(always) #t]
+          [(failure) (not all-ok?)])
         (for/list ([to (in-list (hash-ref config 'emails null))]
                    #:when (or (not all-ok?)
                               (hash-ref to 'on-success? #t)))
@@ -135,7 +138,7 @@
     (display content)
     
     (printf "\nSending email:\n")
-    (send-email smtp-server (for/list ([to (in-list tos)])
+    (send-email email-config (for/list ([to (in-list tos)])
                               (define addr (hash-ref to 'to))
                               (printf "  ~a\n" addr)
                               addr)
@@ -150,17 +153,29 @@
 
 (module+ main
   (require racket/cmdline)
-  (define smtp-server #f)
-  (define email? #t)
+  (define email-config (hash))
+  (define email-mode 'always)
   (command-line
-   #:once-each
+   #:once-any
    [("--no-email") "Skip sending e-mail with results"
-    (set! email? #f)]
-   [("--smtp") server "Specify a server for outgoing email"
-    (set! smtp-server server)]
+    (set! email-mode 'none)]
+   [("--fail-email") "Sending e-mail with results only on failure"
+    (set! email-mode 'failure)]
+   #:once-each
+   [("--email-config") file "Specify SMTP configuration for outgoing email"
+    (set! email-config (with-handlers ([exn:fail? (lambda (exn)
+                                                   (log-error (exn-message exn))
+                                                   #f)])
+                        (call-with-input-file*
+                         file
+                         read)))
+    (unless (hash? email-config)
+      (raise-user-error 'take-pulse
+                        "bad e-mail configuration file: ~a"
+                        file))]
    #:args
    (s3-bucket)
    (unless (take-pulse s3-bucket
-                       #:email? email?
-                       #:smtp-server smtp-server)
+                       #:email-mode email-mode
+                       #:email-config email-config)
      (exit 1))))

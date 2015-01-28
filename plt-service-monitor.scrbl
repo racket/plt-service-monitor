@@ -41,11 +41,13 @@ monitor; it polls an S3 bucket and associated HTTP sites.}
 
 The @racketmodname[plt-service-monitor/take-pulse] module can be run
 from the command-line, in which case the S3 bucket name must be given
-as a command-line argument. In addition, @DFlag{smtp} can specify the
-SMTP server for e-mail alerts.
+as a command-line argument. In addition, @DFlag{email-config} can specify
+a file that contains a configuration hash table for sending e-mail alerts,
+and @DFlag{no-email} or @DFlag{fail-email} configure the e-mail alert mode.
 
 @defproc[(take-pulse [s3-bucket string?]
-                     [#:smtp-server smtp-server (or/c #f string?) #f])
+                     [#:email-mode email-mode (or/c 'none 'always 'failure) 'always]
+                     [#:email-config email-config hash? (hash)])
          boolean?]{
 
 Polls the specified S3 bucket for heartbeats and polls configured HTTP
@@ -53,9 +55,32 @@ sites. The results are printed to the current output port and the
 resulting boolean is @racket[#t] only if all checks succeed.
 
 The S3 bucket's configuration file may specify e-mail addresses to
-receive the poll summary. In that case, if @racket[smtp-server] is
-@racket[#f], then e-mail is sent through @exec{sendmail}, otherwise
-the SMTP protocol is used with the specified server.}
+receive the poll summary. If @racket[email-mode] is @racket['always]
+or it is @racket['failure] and the health check fails, then e-mail is
+sent (although individual e-mail addresses can be configured to send
+mail only on failure). In that case, @racket[email-config] configures
+the way that e-mail is sent through the following keys:
+
+@itemlist[
+
+ @item{@racket['server] --- a string or @racket[#f] (the default); if
+       a string is provided then the SMTP protocol is used with the
+       specified server, otherwise e-mail is sent through
+       @exec{sendmail}}
+
+ @item{@racket['from] --- an e-mail address for the sender; the
+       default is the first e-mail address in the list of receivers}
+
+ @item{@racket['connect] (SMTP only) --- @racket['plain],
+       @racket['ssl], or @racket['tls]}
+
+ @item{@racket['user] (SMTP only) --- a username string for
+       authentication}
+
+ @item{@racket['password] (SMTP only) --- a password string for
+       authentication}
+
+]}
 
 @; ------------------------------------------------------------
 @section{Configuring a Service Monitor}
