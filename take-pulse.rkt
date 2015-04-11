@@ -49,7 +49,8 @@
           (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
         beat)))
 
-  (define 1-hour (* 60 60))
+  (define 1-minute 60)
+  (define 1-hour (* 1-minute 60))
   (define 1-day (* 1-hour 24))
   (define (task-period task)
     (or (hash-ref task 'period #f)
@@ -118,6 +119,8 @@
                  (n-of (quotient elapsed 1-day) "day")]
                 [(>= elapsed 1-hour)
                  (n-of (quotient elapsed 1-hour) "hour")]
+                [(>= elapsed 1-minute)
+                 (n-of (quotient elapsed 1-minute) "minute")]
                 [else
                  (n-of elapsed "second")]))
              (define beat-date (date->string (seconds->date s #f) #t))
