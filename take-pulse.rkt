@@ -8,13 +8,15 @@
 (provide take-pulse)
 
 (define (take-pulse s3-bucket
+                    #:region [region (bucket-location s3-bucket)]
                     #:email-mode [email-mode 'always]
                     #:email-config [email-config (hash)])
   (define now (current-seconds))
   (define config
     (read
      (open-input-bytes
-      (get/bytes (format "~a/config.rktd" s3-bucket)))))
+      (parameterize ([s3-region region])
+        (get/bytes (format "~a/config.rktd" s3-bucket))))))
 
   ;; Ping sites
   (define sites (hash-ref config 'sites null))
@@ -42,7 +44,8 @@
                                     (exn-message exn)))])
         (define beat
           (bytes->jsexpr
-           (get/bytes (format "~a/~a-beat.json" s3-bucket task-name))))
+           (parameterize ([s3-region region])
+             (get/bytes (format "~a/~a-beat.json" s3-bucket task-name)))))
         (unless (hash? beat)
           (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
         (unless (exact-nonnegative-integer? (hash-ref beat 'seconds 0))

@@ -28,9 +28,15 @@ Besides providing the @racket[beat] function,
 @racketmodname[plt-service-monitor/beat] can be run from the command
 line and given its arguments as command-line arguments.
 
-@defproc[(beat [s3-bucket string?] [task-name string?]) void?]{
+@defproc[(beat [s3-bucket string?]
+               [task-name string?]
+               [#:region region string? ...])
+         void?]{
 
-Records a heartbeat, based on the current machine's time in UTC.}
+Records a heartbeat, based on the current machine's time in UTC.
+
+If the @racket[region] of @racket[s3-bucket] is not supplied, it is
+determined through a query.}
 
 @; ------------------------------------------------------------
 @section{Taking a Pulse}
@@ -46,13 +52,16 @@ a file that contains a configuration hash table for sending e-mail alerts,
 and @DFlag{no-email} or @DFlag{fail-email} configure the e-mail alert mode.
 
 @defproc[(take-pulse [s3-bucket string?]
+                     [#:region region string? ...]
                      [#:email-mode email-mode (or/c 'none 'always 'failure) 'always]
                      [#:email-config email-config hash? (hash)])
          boolean?]{
 
 Polls the specified S3 bucket for heartbeats and polls configured HTTP
 sites. The results are printed to the current output port and the
-resulting boolean is @racket[#t] only if all checks succeed.
+resulting boolean is @racket[#t] only if all checks succeed. If
+the @racket[region] of @racket[s3-bucket] is not supplied, it is
+determined through a query.
 
 The S3 bucket's configuration file may specify e-mail addresses to
 receive the poll summary. If @racket[email-mode] is @racket['always]
@@ -88,7 +97,8 @@ the way that e-mail is sent through the following keys:
 @defmodule[plt-service-monitor/config]{The
 @racketmodname[plt-service-monitor/config] library provides functions
 for adjusting a service monitor's configuration as stored at its S3
-bucket.}
+bucket. (The region of the bucket is determined automatically
+through a query.)}
 
 @deftogether[(
 @defproc[(get-task [s3-bucket string?]

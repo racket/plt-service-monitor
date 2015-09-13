@@ -80,24 +80,25 @@
 ;; ----------------------------------------
 
 (define (adjust mode s3-bucket key name-key ht force?)
-  (define config (get-config s3-bucket force?))
-  (define old-list (hash-ref config key null))
-  (define old-val (for/first ([e (in-list old-list)])
-                    (and (equal? (hash-ref ht name-key)
-                                 (hash-ref e name-key))
-                         e)))
-  (case mode
-   [(get) old-val]
-   [(set remove)
-    (define rest-list (for/list ([e (in-list old-list)]
-                                 #:unless (equal? (hash-ref ht name-key)
-                                                  (hash-ref e name-key)))
-                        e))
-    (define new-list (case mode
-                       [(set) (cons ht rest-list)]
-                       [(remove) rest-list]))
-    (unless (equal? new-list old-list)
-      (put-config s3-bucket (hash-set config key new-list)))]))
+  (parameterize ([s3-region (bucket-location s3-bucket)])
+    (define config (get-config s3-bucket force?))
+    (define old-list (hash-ref config key null))
+    (define old-val (for/first ([e (in-list old-list)])
+                      (and (equal? (hash-ref ht name-key)
+                                   (hash-ref e name-key))
+                           e)))
+    (case mode
+      [(get) old-val]
+      [(set remove)
+       (define rest-list (for/list ([e (in-list old-list)]
+                                    #:unless (equal? (hash-ref ht name-key)
+                                                     (hash-ref e name-key)))
+                           e))
+       (define new-list (case mode
+                          [(set) (cons ht rest-list)]
+                          [(remove) rest-list]))
+       (unless (equal? new-list old-list)
+         (put-config s3-bucket (hash-set config key new-list)))])))
 
 ;; ----------------------------------------
 
