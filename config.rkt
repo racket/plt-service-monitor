@@ -83,7 +83,7 @@
   (parameterize ([s3-region (bucket-location s3-bucket)])
     (define config (get-config s3-bucket force?))
     (define old-list (hash-ref config key null))
-    (define old-val (for/first ([e (in-list old-list)])
+    (define old-val (for/or ([e (in-list old-list)])
                       (and (equal? (hash-ref ht name-key)
                                    (hash-ref e name-key))
                            e)))
@@ -104,6 +104,7 @@
 
 (define (get-config s3-bucket force?)
   (with-handlers ([exn:fail? (lambda (exn)
+                               (log-error "config failure: ~s" (exn-message exn))
                                (if force?
                                    (hash)
                                    (raise exn)))])
