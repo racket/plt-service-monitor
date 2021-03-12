@@ -14,7 +14,10 @@
     (void (put/bytes (format "~a/~a-beat.json" s3-bucket service-name)
                      (jsexpr->bytes (hash 'seconds now
                                           'date now-str))
-                     "application/json"))))
+                     "application/json"
+                     (hasheq 'x-amz-acl "public-read"
+                             ;; cache for one minute:
+                             'Cache-Control "max-age=60, public")))))
 
 (module+ main
   (require racket/cmdline)
