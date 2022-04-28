@@ -158,9 +158,11 @@
   all-ok?)
 
 (module+ main
-  (require racket/cmdline)
+  (require racket/cmdline
+           "beat.rkt")
   (define email-config (hash))
   (define email-mode 'always)
+  (define done-beat #f)
   (command-line
    #:once-any
    [("--no-email") "Skip sending e-mail with results"
@@ -179,9 +181,15 @@
       (raise-user-error 'take-pulse
                         "bad e-mail configuration file: ~a"
                         file))]
+   [("--beat") self-name "Register a new heartbeat on completion"
+    (set! done-beat self-name)]
    #:args
    (s3-bucket)
-   (unless (take-pulse s3-bucket
-                       #:email-mode email-mode
-                       #:email-config email-config)
+   (define all-ok?
+     (take-pulse s3-bucket
+                 #:email-mode email-mode
+                 #:email-config email-config))
+   (when done-beat
+     (beat s3-bucket done-beat))
+   (unless all-ok?
      (exit 1))))

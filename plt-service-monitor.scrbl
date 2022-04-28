@@ -50,6 +50,10 @@ from the command-line, in which case the S3 bucket name must be given
 as a command-line argument. In addition, @DFlag{email-config} can specify
 a file that contains a configuration hash table for sending e-mail alerts,
 and @DFlag{no-email} or @DFlag{fail-email} configure the e-mail alert mode.
+A @DFlag{beat} argument registers a new heartbeat for a given task name
+after taking a pulse (and sending e-mail, if any), which is useful for
+monitoring the server monitor itself from the a different service
+monitor.
 
 @defproc[(take-pulse [s3-bucket string?]
                      [#:region region string? ...]
