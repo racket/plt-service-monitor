@@ -1,21 +1,34 @@
-#lang racket
+#lang racket/base
 
-(require net/url)
+(require "common.rkt")
+
+(define files
+  (list "pkgd-update-beat.json"
+        "pkgd-upload-beat.json"
+        "pkg-build-beat.json"
+        "drdr-poll-beat.json"
+        "drdr-run-beat.json"
+        "drdr-disk-beat.json"
+        "snapshot-utah-beat.json"
+        "nwu-pkg-build-and-snapshot-beat.json"
+        "build-plot-cs-beat.json"
+        "build-plot-bc-beat.json"
+        "condense-logs-beat.json"
+        "condense-west-logs-beat.json"
+        "utah-monitor-beat.json"
+        "nwu-monitor-beat.json"))
 
 (define (clean!)
   (printf "Deleting files\n")
-  (for ([f (directory-list)]
-        #:when (path-has-extension? f ".json"))
-    (delete-file f)))
+  (for ([file (in-list files)] #:when (file-exists? file))
+    (delete-file file)))
 
-(define (download! . xs)
-  (for ([x xs])
-    (printf "Downloading ~a\n" x)
-    (define p (get-pure-port (string->url (~a "https://heartbeat.racket-lang.org/" x))))
-    (with-output-to-file x
+(define (download!)
+  (for ([file (in-list files)])
+    (printf "Downloading ~a\n" file)
+    (with-output-to-file file
       #:exists 'replace
-      (λ () (copy-port p (current-output-port))))
-    (close-input-port p)))
+      (λ () (display (get-from-site file))))))
 
 (module+ main
   (require racket/cmdline)
@@ -29,18 +42,4 @@
 
   (cond
     [clean? (clean!)]
-    [else
-     (download! "pkgd-update-beat.json"
-                "pkgd-upload-beat.json"
-                "pkg-build-beat.json"
-                "drdr-poll-beat.json"
-                "drdr-run-beat.json"
-                "drdr-disk-beat.json"
-                "snapshot-utah-beat.json"
-                "nwu-pkg-build-and-snapshot-beat.json"
-                "build-plot-cs-beat.json"
-                "build-plot-bc-beat.json"
-                "condense-logs-beat.json"
-                "condense-west-logs-beat.json"
-                "utah-monitor-beat.json"
-                "nwu-monitor-beat.json")]))
+    [else (download!)]))

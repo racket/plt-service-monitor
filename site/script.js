@@ -23,7 +23,7 @@
   const currentTime = Math.floor(Date.now() / 1000);
 
   for (const row of rows) {
-    const freq = parseInt(row.dataset.freq);
+    const period = parseInt(row.dataset.period);
     const link = row.dataset.link;
     fetch(link)
       .then(resp => resp.json())
@@ -54,7 +54,7 @@
         row.appendChild(timeCell);
         row.appendChild(elapsedCell);
 
-        if (currentTime - data.seconds >= freq) {
+        if (currentTime - data.seconds >= period) {
           row.classList.add('status-bad');
         } else {
           row.classList.add('status-good');

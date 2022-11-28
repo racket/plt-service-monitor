@@ -3,7 +3,8 @@
          aws/s3
          json
          net/url
-         "private/email.rkt")
+         "private/email.rkt"
+         "private/common.rkt")
 
 (provide take-pulse)
 
@@ -52,20 +53,13 @@
           (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
         beat)))
 
-  (define 1-minute 60)
-  (define 1-hour (* 1-minute 60))
-  (define 1-day (* 1-hour 24))
-  (define (task-period task)
-    (or (hash-ref task 'period #f)
-        (hash-ref config 'period 1-day)))
-  
   (define all-ok?
     (and (andmap values pings)
          (for/and ([task (in-list tasks)]
                    [beat (in-list beats)])
            (and (not (hash-ref beat 'error #f))
                 (<= (- now (hash-ref beat 'seconds 0))
-                    (task-period task))))))
+                    (task-period task config))))))
 
   (define tos
     (if (case email-mode
@@ -128,9 +122,7 @@
                  (n-of elapsed "second")]))
              (define beat-date (date->string (seconds->date s #f) #t))
              (cond
-              [(> elapsed
-                  (or (hash-ref task 'period #f)
-                      (hash-ref config 'period 1-day)))
+              [(> elapsed (task-period task config))
                (printf " ERROR\n  last report was ~a (~a ago)\n"
                        beat-date
                        ago)]

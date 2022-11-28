@@ -11,11 +11,14 @@ This directory contains components for https://heartbeat.racket-lang.org/
 
 Run `raco pkg install` to install all dependencies.
 
-Run `racket sample-data.rkt` to populate sample data.
+## Regeneration
 
-If you change `gen-index.rkt`, you need to run it to regenerate `index.html`.
+If you change `gen-index.rkt` or if `https://heartbeat.racket-lang.org/config.rktd` is updated, 
+you need to run `racket gen-index.rkt` to regenerate `index.html`.
 
 ## Testing
+
+Run `racket sample-data.rkt` to populate sample data.
 
 Launch a local server (e.g. with [`raco static-web`](https://github.com/samdphillips/raco-static-web/)).
 Then, you can view the page locally.
