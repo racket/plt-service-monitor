@@ -1,0 +1,16 @@
+.group-header {
+    text-align: center;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.status-good {
+    background-color: #81c784;
+}
+
+.status-bad {
+    background-color: #e57373;
+}
