@@ -6,7 +6,7 @@
          "common.rkt")
 
 (define (main outp)
-  (define config (read (open-input-string (get-from-site "config.rktd"))))
+  (define config (get-config))
   (define tasks (hash-ref config 'tasks null))
   (define task-map
     (for/hash ([task (in-list tasks)])
@@ -16,7 +16,7 @@
     `(tr (td (@ [class "group-header"] [colspan "2"]) ,title)))
 
   (define (row #:title title #:id id)
-    (define link (~a id "-beat.json"))
+    (define link (format-file id))
     `(tr (@ [class "table-data"]
             [data-period ,(~a (task-period (hash-ref task-map id) config))]
             [data-link ,link])

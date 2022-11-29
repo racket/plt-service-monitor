@@ -29,7 +29,7 @@
       .then(resp => resp.json())
       .then(data => {
         const timeString = new Date(data.seconds * 1000)
-              .toLocaleString('en-US');
+              .toString();
 
         let elapsedSecs = currentTime - data.seconds;
         let elapsedMins = Math.floor(elapsedSecs / 60);
