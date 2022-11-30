@@ -16,3 +16,5 @@
 (define scribblings '(("plt-service-monitor.scrbl")))
 
 (define compile-omit-paths '("site"))
+
+(define test-omit-paths '("site"))
