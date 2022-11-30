@@ -14,3 +14,5 @@
 (define pkg-authors '(mflatt))
 
 (define scribblings '(("plt-service-monitor.scrbl")))
+
+(define compile-omit-paths '("site"))
