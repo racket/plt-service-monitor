@@ -25,4 +25,8 @@ Then, you can view the page locally.
 
 ## Deployment
 
-Copy `index.html`, `script.js`, and `style.css` to your destination.
+Copy `index.html`, `script.js`, and `style.css` to your destination. To deploy `index.html` to `https://heartbeat.racket-lang.org`, run (with appropriate credentials):
+
+```
+$ raco s3-sync  --web index.html s3://heartbeat.racket-lang.org
+```
