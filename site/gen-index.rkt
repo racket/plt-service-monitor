@@ -30,6 +30,7 @@
       (@ [lang "en"])
       (head (title "Racket Services: Most Recent Heartbeat")
             (meta (@ [charset "utf-8"]))
+            (meta (@ [http-equiv "refresh"] [content "30"]))
             (meta (@ [name "viewport"]
                      [content "width=device-width, initial-scale=1"]))
             (link (@ [rel "stylesheet"]
