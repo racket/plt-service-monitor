@@ -53,12 +53,14 @@ and @DFlag{no-email} or @DFlag{fail-email} configure the e-mail alert mode.
 A @DFlag{beat} argument registers a new heartbeat for a given task name
 after taking a pulse (and sending e-mail, if any), which is useful for
 monitoring the server monitor itself from the a different service
-monitor.
+monitor; that service name is treated as the ``self'' name of the current
+service to avoid reporting misleading failures about itself.
 
 @defproc[(take-pulse [s3-bucket string?]
                      [#:region region string? ...]
                      [#:email-mode email-mode (or/c 'none 'always 'failure) 'always]
-                     [#:email-config email-config hash? (hash)])
+                     [#:email-config email-config hash? (hash)]
+                     [#:self-name self-name (or/c #f string?) #f])
          boolean?]{
 
 Polls the specified S3 bucket for heartbeats and polls configured HTTP
@@ -77,7 +79,7 @@ the way that e-mail is sent through the following keys:
 @itemlist[
 
  @item{@racket['server] --- a string or @racket[#f] (the default); if
-       a string is provided then the SMTP protocol is used with the
+       a string is provided, then the SMTP protocol is used with the
        specified server, otherwise e-mail is sent through
        @exec{sendmail}}
 
@@ -93,7 +95,17 @@ the way that e-mail is sent through the following keys:
  @item{@racket['password] (SMTP only) --- a password string for
        authentication}
 
-]}
+ @item{@racket['sending-server] --- (SMTP only) a string or @racket[#f] (the default); if
+       a string is provided, then it is supplied as the name of the sending
+       server when communicating with the server specified by @racket['server]}
+
+]
+
+If @racket[self-name] is not @racket[#f], then the current time is
+used for the last heartbeat of @racket[self-name] (which can prevent a
+pulse-taking service from reporting its own failure).
+
+}
 
 @; ------------------------------------------------------------
 @section{Configuring a Service Monitor}

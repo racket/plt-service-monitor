@@ -11,7 +11,8 @@
 (define (take-pulse s3-bucket
                     #:region [region (bucket-location s3-bucket)]
                     #:email-mode [email-mode 'always]
-                    #:email-config [email-config (hash)])
+                    #:email-config [email-config (hash)]
+                    #:self-name [self-name #f])
   (define now (current-seconds))
   (define config
     (read
@@ -27,6 +28,7 @@
       (define url (string->url url-str))
       (define ok? #f)
       (printf "Pinging site ~a\n" url-str)
+      (flush-output)
       (define t (thread (lambda ()
                           (get-pure-port url)
                           (set! ok? #t))))
@@ -39,19 +41,24 @@
   (define beats
     (for/list ([task (in-list tasks)])
       (define task-name (hash-ref task 'name))
-      (printf "Checking task ~s\n" task-name)
-      (with-handlers ([exn? (lambda (exn)
-                              (hash 'error
-                                    (exn-message exn)))])
-        (define beat
-          (bytes->jsexpr
-           (parameterize ([s3-region region])
-             (get/bytes (format "~a/~a-beat.json" s3-bucket task-name)))))
-        (unless (hash? beat)
-          (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
-        (unless (exact-nonnegative-integer? (hash-ref beat 'seconds 0))
-          (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
-        beat)))
+      (cond
+        [(equal? task-name self-name)
+         (hash 'seconds now)]
+        [else
+         (printf "Checking task ~s\n" task-name)
+         (flush-output)
+         (with-handlers ([exn? (lambda (exn)
+                                 (hash 'error
+                                       (exn-message exn)))])
+           (define beat
+             (bytes->jsexpr
+              (parameterize ([s3-region region])
+                (get/bytes (format "~a/~a-beat.json" s3-bucket task-name)))))
+           (unless (hash? beat)
+             (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
+           (unless (exact-nonnegative-integer? (hash-ref beat 'seconds 0))
+             (error 'take-pulse "heartbeat content is not a hash: ~e" beat))
+           beat)])))
 
   (define all-ok?
     (and (andmap values pings)
@@ -136,9 +143,11 @@
     (display content)
     
     (printf "\nSending email:\n")
+    (flush-output)
     (send-email email-config (for/list ([to (in-list tos)])
                               (define addr (hash-ref to 'to))
                               (printf "  ~a\n" addr)
+                              (flush-output)
                               addr)
                 (format "[take-pulse] ~a health check at ~a"
                         (if all-ok?
@@ -180,7 +189,8 @@
    (define all-ok?
      (take-pulse s3-bucket
                  #:email-mode email-mode
-                 #:email-config email-config))
+                 #:email-config email-config
+                 #:self-name done-beat))
    (when done-beat
      (beat s3-bucket done-beat))
    (unless all-ok?

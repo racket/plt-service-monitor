@@ -21,23 +21,32 @@
                                [(ssl) 465]
                                [(tls) 587]
                                [else (error "bad connect mode: " smtp-connect)]))])
-      (smtp-send-message (get-opt 'server #f)
-                         #:port-no port-no
-                         #:tcp-connect (if (eq? 'ssl smtp-connect)
-                                           ssl-connect
-                                           tcp-connect)
-                         #:tls-encode (and (eq? 'tls smtp-connect)
-                                           ports->ssl-ports)
-                         #:auth-user (get-opt 'user #f)
-                         #:auth-passwd (get-opt 'password #f)
-                         from
-                         tos
-                         (standard-message-header from
-                                                  tos
-                                                  null
-                                                  null
-                                                  subject)
-                         lines))]
+      (parameterize ([smtp-sending-server (or (get-opt 'sending-server #f)
+                                              (smtp-sending-server))])
+        (smtp-send-message (get-opt 'server #f)
+                           #:port-no port-no
+                           #:tcp-connect (if (eq? 'ssl smtp-connect)
+                                             (lambda (server port)
+                                               (ssl-connect server port 'secure))
+                                             tcp-connect)
+                           #:tls-encode (and (eq? 'tls smtp-connect)
+                                             (lambda (i o
+                                                        #:mode mode
+                                                        #:encrypt encrypt ; dropped
+                                                        #:close-original? close?)
+                                               (ports->ssl-ports i o
+                                                                 #:mode mode
+                                                                 #:close-original? close?)))
+                           #:auth-user (get-opt 'user #f)
+                           #:auth-passwd (get-opt 'password #f)
+                           from
+                           tos
+                           (standard-message-header from
+                                                    tos
+                                                    null
+                                                    null
+                                                    subject)
+                           lines)))]
    [else
     (send-mail-message from
                        subject	 	 	 	 
