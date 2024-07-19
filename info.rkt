@@ -5,7 +5,8 @@
 (define deps '("net-lib"
                "base"
                ["aws" #:version "1.6"]
-               "http"))
+               "http"
+               "html-writing"))
 (define build-deps '("racket-doc"
                      "scribble-lib"))
 
@@ -18,3 +19,5 @@
 (define compile-omit-paths '("site"))
 
 (define test-omit-paths '("site"))
+
+(define version "1.1")

@@ -123,10 +123,12 @@ through a query.)}
           (or/c #f hash?)]
 @defproc[(set-task [s3-bucket string?]
                    [task hash?]
-                   [#:force? force? any/c #f])
+                   [#:force? force? any/c #f]
+                   [#:skip-html? skip-html? any/c #f])
           void?]
 @defproc[(remove-task [s3-bucket string?]
-                      [task-name string?])
+                      [task-name string?]
+                      [#:skip-html? skip-html? any/c #f])
           void?]
 )]{
 
@@ -155,7 +157,17 @@ keys with the indicated contracts on the key values:
 
 Unless @racket[force?] is true, then @racket[get-task] or
 @racket[set-task] fail if @racket[s3-bucket] does not have a
-configuration object @filepath{config.rktd}.}
+configuration object @filepath{config.rktd}.
+
+Unless @racket[skip-html?] is true, then @racket[set-task] or
+@racket[remove-task] uploads @filepath{index.html},
+@filepath{config.css}, and @filepath{script.js} alongside
+@filepath{config.rktd} for viewing heartbeat results. Those files are
+uploaded only if @racket[set-task] or @racket[remove-task] changes the
+configuration. Details of the generated HTML page can be inspected and
+adjusted with @racket[get-html] and @racket[set-html].
+
+@history[#:changed "1.1" @elem{Added HTML view support.}]}
 
 @deftogether[(
 @defproc[(get-site [s3-bucket string?]
@@ -164,10 +176,12 @@ configuration object @filepath{config.rktd}.}
           (or/c #f hash?)]
 @defproc[(set-site [s3-bucket string?]
                    [site hash?]
-                   [#:force? force? any/c #f])
+                   [#:force? force? any/c #f]
+                   [#:skip-html? skip-html? any/c #f])
           void?]
 @defproc[(remove-site [s3-bucket string?]
-                      [url string?])
+                      [url string?]
+                      [#:skip-html? skip-html? any/c #f])
           void?]
 )]{
 
@@ -183,7 +197,9 @@ keys with the indicated contracts on the key values:
 
  @item{@racket['url : string?] (required) --- the URL to poll}
 
-]}
+]
+
+@history[#:changed "1.1" @elem{Added HTML view support.}]}
 
 
 @deftogether[(
@@ -193,10 +209,12 @@ keys with the indicated contracts on the key values:
           (or/c #f hash?)]
 @defproc[(set-email [s3-bucket string?]
                     [to hash?]
-                    [#:force? force? any/c #f])
+                    [#:force? force? any/c #f]
+                    [#:skip-html? skip-html? any/c #f])
           void?]
 @defproc[(remove-email [s3-bucket string?]
-                       [addr string?])
+                       [addr string?]
+                       [#:skip-html? skip-html? any/c #f])
           void?]
 )]{
 
@@ -216,4 +234,33 @@ keys with the indicated contracts on the key values:
  @item{@racket['on-success? : boolean?] --- whether e-mail is sent
        even when all health checks succeed; the default is @racket[#t]}
 
-]}
+]
+
+@history[#:changed "1.1" @elem{Added HTML view support.}]}
+
+@deftogether[(
+@defproc[(get-html [s3-bucket string?]
+                   [#:force? force? any/c #f])
+          (or/c #f hash?)]
+@defproc[(set-html [s3-bucket string?]
+                   [style hash?]
+                   [#:force? force? any/c #f]
+                   [#:skip-html? skip-html? any/c #f])
+          void?]
+)]{
+
+Gets or adjusts details about a generate HTML to be uploaded alongside
+@filepath{config.rktd}. The function protocol is other the same as for
+@racket[get-task] and @racket[set-task].
+
+The hash table provided to @racket[set-html] can have the following
+keys with the indicated contracts on the key values, and
+@racket[get-html] produces a similar table or @racket[#f]:
+
+@itemlist[
+
+ @item{@racket['title : string?] --- a title string}
+
+]
+
+@history[#:added "1.1"]}

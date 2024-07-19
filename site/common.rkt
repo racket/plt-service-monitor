@@ -7,14 +7,14 @@
 (require racket/port
          net/url)
 
-(define (get-from-site file)
+(define (get-from-site file src-url)
   (port->string
    (get-pure-port
-    (string->url (string-append "https://heartbeat.racket-lang.org/" file)))
+    (combine-url/relative (string->url src-url) file))
    #:close? #t))
 
-(define (get-config)
-  (read (open-input-string (get-from-site "config.rktd"))))
+(define (get-config url)
+  (read (open-input-string (get-from-site "config.rktd" url))))
 
 (define (format-file id)
   (string-append id "-beat.json"))
