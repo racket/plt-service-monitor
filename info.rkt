@@ -5,8 +5,7 @@
 (define deps '("net-lib"
                "base"
                ["aws" #:version "1.6"]
-               "http"
-               "html-writing"))
+               "http"))
 (define build-deps '("racket-doc"
                      "scribble-lib"))
 
