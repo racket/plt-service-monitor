@@ -58,8 +58,9 @@
         (tbody
          ,(group-header '(a ([href "https://pkgs.racket-lang.org/"])
                             "Package server"))
-         ,(row #:title "Update" #:id "pkgd-update")
-         ,(row #:title "Upload" #:id "pkgd-upload")
+         ,(row #:title "Back update" #:id "pkgd-update")
+         ,(row #:title "Back upload" #:id "pkgd-upload")
+         ,(row #:title "Front publish" #:id "pkgd-publish")
 
          ,(group-header '(a ([href "https://pkg-build.racket-lang.org/"])
                             "pkg-build"))
