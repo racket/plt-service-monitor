@@ -75,7 +75,7 @@
          ,(group-header '(a ([href "https://snapshot.racket-lang.org/"])
                             "Snapshots"))
          ,(row #:title "Utah" #:id "snapshot-utah")
-         ,(row #:title "Northwestern" #:id "nwu-pkg-build-and-snapshot")
+         ,(row #:title "Northwestern" #:id "nwu-snapshot")
 
          ,(group-header '(a ([href "https://build-plot.racket-lang.org/"])
                             "Build plot"))
